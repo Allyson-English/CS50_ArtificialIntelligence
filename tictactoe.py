@@ -72,11 +72,13 @@ def winner(board):
     Returns the winner of the game, if there is one.
     """
     
+    # across
     for row in board:
         if len(set(row)) == 1 and not None in row:
             return list(set(row))[0]
 
-        
+    
+    # horizontal
     for x in range(len(board)):
         check = set()
 
@@ -85,7 +87,19 @@ def winner(board):
 
         if len(check) == 1 and not None in check:
             return list(set(check))[0]
+    
+    # diagonal
+    for x in range(1):
+        i = 0
         
+        check1 = list(set([board[i][i], board[i+1][i+1], board[i+2][i+2]]))
+        check2 = list(set([board[i][i+2], board[i+1][i+1], board[i+2][i]]))
+        
+        if len(check1) == 1 and not None in check1:
+            return check1[0]
+        if len(check2) == 1 and not None in check2:
+            return check2[0]
+    
     return None
 
 def terminal(board):
@@ -123,49 +137,81 @@ def utility(board):
 
 
 def minimax(board):
-    """
-    Returns the optimal action for the current player on the board.
-    """
     
-def minimax(board):
+    active = player(board)
     
-    # determine active player
-    active_player = player(board)
+    if active == 'X':
+        
+        options = actions(board)
+        maxUtl = -999999
+        
+        for ea in options:
+            temp = result(copy.deepcopy(board), ea)
+            brd = playgame(temp)
+            evaluation = utility(brd)
+            
+            maxUtl = max(maxUtl, evaluation)
+            
+            if maxUtl == evaluation:
+                nextmove = ea
+        
+        return nextmove
     
-    # if max player is active 
-    if active_player == 'X':
+    if active == 'O':
         
-        # make a deep copy of board state 
-        cpy = copy.deepcopy(board)
+        options = actions(board)
+        minUtl = 999999
         
-        # display available options
-        options = actions(cpy)
-        
-        while not winner(cpy):
-        
-            # for each option 
-            for mv in options:
+        for ea in options:
+            temp = result(copy.deepcopy(board), ea)
+            brd = playgame(temp)
+            evaluation = utility(brd)
             
-                if utility(result(cpy, mv)) != -1:
-                    return mv
+            minUtl = min(minUtl, evaluation)
             
+            if minUtl == evaluation:
+                nextmove = ea
         
-    if active_player == 'O':
-        
-        # make a deep copy of board state 
-        cpy = copy.deepcopy(board)
-        
-        # display available options
-        options = actions(cpy)
-        
-        while not winner(cpy):
-        
-            # for each option 
-            for mv in options:
+        return nextmove
+
+
+def playgame(board):
+    
+    
+    while not terminal(board):
+
+        active = player(board)
+
+        if active == 'X':
             
-                if utility(result(cpy, mv)) != 1:
-                    return mv
+            maxUtl = -99999
+            options = actions(board)
+            nextmove = ''
             
-                else:
-                    temp = result(cpy, mv)
-                    mnmx = minimax(temp)
+            for ea in options:
+                temp = result(board, ea)
+                evaluation = utility(temp)
+                
+                maxUtl = max(maxUtl, evaluation)
+                if maxUtl == evaluation:
+                    nextmove = ea
+ 
+            board = result(board, nextmove)
+
+        if active == 'O':
+
+            minUtl = 99999
+            options = actions(board)
+            nextmove = ''
+            
+            for ea in options:
+                temp = result(board, ea)
+                evaluation = utility(temp)
+                
+                minUtl = min(minUtl, evaluation)
+                if minUtl == evaluation:
+                    nextmove = ea
+                      
+            board = result(board, nextmove)
+            
+    return board
