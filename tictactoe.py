@@ -42,14 +42,14 @@ def actions(board):
     Returns set of all possible actions (i, j) available on the board.
     """
     
-    options = []
+    options = set()
 
     for x in range(len(board)):
 
         for y in range(len(board[x])):
 
             if board[x][y] == None:
-                options.append((x,y))
+                options.add((x,y))
                 
     return options
 
@@ -59,12 +59,14 @@ def result(board, action):
     Returns the board that results from making move (i, j) on the board.
     """
     
-    user = player(board)
+    temp_b = copy.deepcopy(board)
+    
+    user = player(temp_b)
     
     x, y = action
-    board[x][y] = user
+    temp_b[x][y] = user
     
-    return board
+    return temp_b
 
 
 def winner(board):
