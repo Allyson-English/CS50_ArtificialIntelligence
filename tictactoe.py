@@ -138,80 +138,68 @@ def utility(board):
 
 def minimax(board):
     
-    active = player(board)
+    options = actions(board)
+    temp_b = copy.deepcopy(board)
+    
+    if player(board) == 'X':
+        
+        maxEval = float('-INF')
+        bestmove = ''
+    
+        for child in options:
+            temp_b = result(temp_b, child)
+            evaluation = apply_minimax(temp_b)
+            maxEval = max(maxEval, evaluation)
+            
+            if maxEval == evaluation:
+                bestmove = child
+                
+        return bestmove
+    
+    
+    if player(board) == 'O':
+        
+        minEval = float('INF')
+        bestmove = ''
+    
+        for child in options:
+            temp_b = result(temp_b, child)
+            evaluation = apply_minimax(temp_b)
+            minEval = min(minEval, evaluation)
+            
+            if minEval == evaluation:
+                bestmove = child
+                
+        return bestmove
+
+
+def apply_minimax(board_state):
+
+    active = player(board_state)
+    
+    if terminal(board_state):
+        return utility(board_state)
     
     if active == 'X':
+        maxEval = float('-INF')
         
-        options = actions(board)
-        maxUtl = -999999
+        options = actions(board_state)
         
-        for ea in options:
-            temp = result(copy.deepcopy(board), ea)
-            brd = playgame(temp)
-            evaluation = utility(brd)
-            
-            maxUtl = max(maxUtl, evaluation)
-            
-            if maxUtl == evaluation:
-                nextmove = ea
-        
-        return nextmove
+        for child in options:
+            temp_b = result(board_state, child)
+            temp_p = player(temp_b)
+            evaluation = apply_minimax(temp_b)
+            maxEval = max(maxEval, evaluation)
+        return maxEval
     
-    if active == 'O':
+    else:
+        minEval = float('INF')
         
-        options = actions(board)
-        minUtl = 999999
+        options = actions(board_state)
         
-        for ea in options:
-            temp = result(copy.deepcopy(board), ea)
-            brd = playgame(temp)
-            evaluation = utility(brd)
-            
-            minUtl = min(minUtl, evaluation)
-            
-            if minUtl == evaluation:
-                nextmove = ea
-        
-        return nextmove
-
-
-def playgame(board):
-    
-    
-    while not terminal(board):
-
-        active = player(board)
-
-        if active == 'X':
-            
-            maxUtl = -99999
-            options = actions(board)
-            nextmove = ''
-            
-            for ea in options:
-                temp = result(board, ea)
-                evaluation = utility(temp)
-                
-                maxUtl = max(maxUtl, evaluation)
-                if maxUtl == evaluation:
-                    nextmove = ea
- 
-            board = result(board, nextmove)
-
-        if active == 'O':
-
-            minUtl = 99999
-            options = actions(board)
-            nextmove = ''
-            
-            for ea in options:
-                temp = result(board, ea)
-                evaluation = utility(temp)
-                
-                minUtl = min(minUtl, evaluation)
-                if minUtl == evaluation:
-                    nextmove = ea
-                      
-            board = result(board, nextmove)
-            
-    return board
+        for child in options:
+            temp_b = result(board_state, child)
+            temp_p = player(temp_b)
+            evaluation = apply_minimax(temp_b)
+            minEval = min(minEval, evaluation)
+        return minEval
