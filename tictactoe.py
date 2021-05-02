@@ -138,41 +138,43 @@ def utility(board):
     return None
 
 
-def minimax(board):
+def minimax(board_state):
     
-    options = actions(board)
-    temp_b = copy.deepcopy(board)
+    options = actions(board_state)
     
-    if player(board) == 'X':
+    if player(board_state) == 'X':
         
         maxEval = float('-INF')
         bestmove = ''
     
         for child in options:
-            temp_b = result(temp_b, child)
+            temp_b = result(board_state, child)
             evaluation = apply_minimax(temp_b)
             maxEval = max(maxEval, evaluation)
+            #print(maxEval)
             
             if maxEval == evaluation:
                 bestmove = child
-                
+        print("\n", player(board_state), maxEval, bestmove)       
         return bestmove
     
     
-    if player(board) == 'O':
+    if player(board_state) == 'O':
         
         minEval = float('INF')
         bestmove = ''
     
         for child in options:
-            temp_b = result(temp_b, child)
+            temp_b = result(board_state, child)
             evaluation = apply_minimax(temp_b)
             minEval = min(minEval, evaluation)
+            #print(minEval)
             
             if minEval == evaluation:
                 bestmove = child
-                
+                      
         return bestmove
+        
 
 
 def apply_minimax(board_state):
@@ -186,22 +188,28 @@ def apply_minimax(board_state):
         maxEval = float('-INF')
         
         options = actions(board_state)
+        holder = 0
         
         for child in options:
             temp_b = result(board_state, child)
             temp_p = player(temp_b)
             evaluation = apply_minimax(temp_b)
             maxEval = max(maxEval, evaluation)
-        return maxEval
+            holder += maxEval
+
+        return holder
     
     else:
         minEval = float('INF')
         
         options = actions(board_state)
+        holder = 0
         
         for child in options:
             temp_b = result(board_state, child)
             temp_p = player(temp_b)
             evaluation = apply_minimax(temp_b)
             minEval = min(minEval, evaluation)
-        return minEval
+            holder += minEval
+
+        return holder
