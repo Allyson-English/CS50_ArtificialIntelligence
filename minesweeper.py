@@ -92,8 +92,9 @@ class Sentence():
     """
 
     def __init__(self, cells, count):
-        self.cells = set(cells)
+        self.cells = cells
         self.count = count
+        
 
     def __eq__(self, other):
         return self.cells == other.cells and self.count == other.count
@@ -106,10 +107,8 @@ class Sentence():
         Returns the set of all cells in self.cells known to be mines.
         """
         
-        if len(self.cell) == self.count:
-            self.mines = self.cells
-        
-        self.mines = set()
+        if len(self.cells) == self.count:
+            return self.cells
 
     def known_safes(self):
         """
@@ -117,9 +116,7 @@ class Sentence():
         """
         
         if self.count == 0:
-            self.safes = self.cells
-        
-        self.safes = set()
+            return self.cells
 
     def mark_mine(self, cell):
         """
@@ -127,8 +124,9 @@ class Sentence():
         a cell is known to be a mine.
         """
         
-        if not cell in self.safes:
-            self.mines.add(cell)
+        if cell in self.cells:
+            self.cells.remove(cell)
+            self.count -= 1
 
     def mark_safe(self, cell):
         """
@@ -136,8 +134,8 @@ class Sentence():
         a cell is known to be safe.
         """
         
-        if not cell in self.mines:
-            self.safes.add(cell)
+        if cell in self.cells:
+            self.cells.remove(cell)
         
             
 
@@ -162,11 +160,6 @@ class MinesweeperAI():
 
         # List of sentences about the game known to be true
         self.knowledge = []
-        
-        # AE Additions
-        
-        # List of all cells 
-        self.allcells = [[(row, col) for col in range(0,width)] for row in range(0,height)]
 
     def mark_mine(self, cell):
         """
@@ -201,82 +194,72 @@ class MinesweeperAI():
             5) add any new sentences to the AI's knowledge base
                if they can be inferred from existing knowledge
         """
+        
         # mark cell as a move that has been made
         self.moves_made.add(cell)
         
         # mark the cell as safe
         self.safes.add(cell)
         
-        # update knowledge base
+        # update knowledge base with cell just uncovered and the count of that cell
+        new_statement = Sentence(cell, count)
+        self.knowledge.append(new_statement)
         
-        print("Move: ", cell)
-        knowledgedict = [x for x in self.knowledge if isinstance(x, dict)]
-        if not knowledgedict:
-            knowledgedict = {}
-            self.knowledge.append(knowledgedict)
-            
-        if knowledgedict:
-            knowledgedict = knowledgedict[0]
-            
-        if not cell in knowledgedict.keys():
-            knowledgedict[cell] = count
-            
-        nbrs = self.neighbors((cell))
-                    
-        
+        # if the count is zero, all neighbors are safe
         if count == 0:
-            for ea in nbrs:
-                self.safes.add(ea)
-
-        for k in knowledgedict.keys():
-
-            if knowledgedict[k] > 0:
-
-                nbrs_originalcell = self.neighbors(k)
-
-                check = [x for x in nbrs_originalcell if not x in knowledgedict.keys()]
-
-                if len(check) == 1:
-
-                    x, y = check[0]
-
-                    nbrs_potentialmine = self.neighbors(check[0])
-
-                    for ea in nbrs_potentialmine:
-                        if not ea in knowledgedict.keys() or knowledgedict[ea] > 0:
-                            continue
-                        else:
-                            x, y = None, None
-
-                    if x and y:
-                        self.mines.add(check[0])
-                        
-                foundmines = [x for x in nbrs_originalcell if x in self.mines]
-                
-                if len(foundmines) != knowledgedict[k]:
-                    
-                    if knowledgedict[k] == len(check):
-                        
-                        for c in check:
-                            self.mines.add(c)
-                    
-                        
-        for ea in self.mines:
-            nbrs = self.neighbors(ea)
+            nbrs = self.neighbors(cell)
             
-            only_one = [x for x in nbrs if x in knowledgedict.keys() and knowledgedict[x] == 1]
+            for each_nbr in nbrs:
+                self.safes.add(each_nbr)
+        
+        # if the count is not zero
+        if count != 0:
+            nbrs = self.neighbors(cell)
             
+            # check all neighbors to see if they are safe or not
+            potential_mines = [x for x in nbrs if not x in self.safes]
             
-            for each_cell in only_one:
+            # if the number of unsafe neighbors equals the number of mines the cell is touching, all those cells are assuradelly mines
+            if len(potential_mines) == count:
+                for each_mine in potential_mines:
+                    self.mark_mine(each_mine)
+            
+            # check all neighbors to see which have already been identified as mines
+            nearby_mines = [x for x in nbrs if x in self.mines]
+            
+            # if the number of mines identified in neighbors is equal to the count, then all other cells touching the cell in question, are safe
+            if len(nearby_mines) == count:
+                for safecells in nbrs:
+                    if not safecells in nearby_mines:
+                        self.safes.add(cell)
+        
+        # loop through knowledge and apply logic above for non-zero counts
+        for statement in self.knowledge:
+           
+            if statement.count != 0:
+                nbrs = self.neighbors(statement.cells)
                 
-                already_touching_one_mine = self.neighbors(each_cell)
+                check_mines_for_neighbor = [x for x in nbrs if x in self.mines]
                 
-                for c in already_touching_one_mine:
-                    if not c in self.mines:
-                        self.safes.add(c)
-
-        print("Safe Cells Identified: ", self.safes)
-        print("Mines Identified: ", self.mines, "\n\n")
+                if len(check_mines_for_neighbor) == statement.count:
+                    for each_cell in nbrs:
+                        if not each_cell in check_mines_for_neighbor:
+                            self.safes.add(each_cell)
+                            
+                
+                check_safes_for_neighbor = [x for x in nbrs if not x in self.safes]
+                
+                if len(check_safes_for_neighbor) == statement.count:
+                    for each_cell in check_safes_for_neighbor:
+                        self.mines.add(each_cell)
+                        
+                
+                
+        
+#         print(cell)
+#         print("Mines: ", self.mines)
+#         print("Safes: ", self.safes, "\n")
+#         print("\n")
         return None
         raise NotImplementedError
 
@@ -314,6 +297,10 @@ class MinesweeperAI():
 
     
     def neighbors(self, cell):
+        
+        if not isinstance(cell, tuple):
+            print(cell)
+            print("Not a tuple")
 
         x, y = cell
         nbrs = [(x+i, y+j) for i in (-1,0,1) for j in (-1,0,1)]
