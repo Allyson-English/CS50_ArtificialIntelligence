@@ -290,10 +290,21 @@ class MinesweeperAI():
             1) have not already been chosen, and
             2) are not known to be mines
         """
-        x, y = random.choice(range(8)), random.choice(range(8))
         
-        print(x, y)
-        return (x, y)
+        
+        possible_moves = [(x, y) for x in range(self.height) for y in range(self.width)]
+        
+        while possible_moves:
+            
+            cell = possible_moves.pop(random.choice(range(len(possible_moves))))
+            
+            if cell in self.moves_made or cell in self.mines:
+                continue
+            else:
+                print(cell)
+                return cell
+        
+        return None
 
     
     def neighbors(self, cell):
